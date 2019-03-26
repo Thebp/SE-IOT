@@ -1,0 +1,9 @@
+import machine
+import ubinascii
+
+id = machine.unique_id()
+test = ubinascii.hexlify(id)
+test2 = ubinascii.hexlify(id).decode("utf-8") 
+print(str(id))
+print(test)
+print(test2)
