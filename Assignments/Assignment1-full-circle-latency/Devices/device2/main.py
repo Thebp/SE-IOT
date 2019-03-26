@@ -34,7 +34,6 @@ def main():
         process_light(prev_light_value, light_value)
 
         prev_light_value = light_value
-        time.sleep(1)
 
 
 if __name__ == '__main__':
