@@ -39,20 +39,20 @@ def read_from_device2(start):
 		return end, light
 
 
-def log_to_file(*args):
+def log_to_file(logfile, *args):
 	text = '\t'.join(map(str, args))
-	with open(file_location, 'w+') as data_file:
-		data_file.write(text)
+	logfile.write(text)
 
 
 def main():
+	log = open(file_location, 'w+')
 	for i in range(100):
 		start = write_to_device1()
 		end, light = read_from_device2(start)
 
 		difference = abs(start - end)
 
-		log_to_file(start, end, difference, light)
+		log_to_file(log, start, end, difference, light)
 		with serial.Serial("/dev/ttyACM0", 115200, timeout=None) as ser:
 			write(ser, 'off')
 			read(ser)
