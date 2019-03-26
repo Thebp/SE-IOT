@@ -15,7 +15,7 @@ def average(data_structure):
 
 def process_light(prev_light_value, light_value):
     if is_light_different(prev_light_value, light_value):
-        print('light diff noticed')
+        print(str(light_value))
 
 
 def is_light_different(prev_light_value, light_value):
