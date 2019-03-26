@@ -40,7 +40,7 @@ def read_from_device2(start):
 
 
 def log_to_file(logfile, *args):
-	text = '\t'.join(map(str, args))
+	text = ','.join(map(str, args)) + "\n"
 	logfile.write(text)
 
 
