@@ -24,6 +24,8 @@ adc = machine.ADC()             # create an ADC object
 apin = adc.channel(pin='P16')   # create an analog pin on P16
 val = apin()
 
+count = 0
+
 pycom.heartbeat(False)
 
 while True:
@@ -34,7 +36,8 @@ while True:
   degC_data = str(degC)
   light_data = str(lt.light()[0])
   print(light_data)
-  data = {'light':light_data, 'temp':degC_data, 'board':board}
+  data = {'light':light_data, 'temp':degC_data, 'board':board, 'count':count}
+  count += 1
   try:
     r2 = requests.post(url, json=data, headers=headers)
     r2.close()
