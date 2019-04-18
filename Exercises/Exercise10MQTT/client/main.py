@@ -28,7 +28,7 @@ def sub_cb(topic, msg):
 
 
 # client = MQTTClient("", url,user="", password="", port=12345)
-client = MQTTClient("daniel", "io.adafruit.com",user="marcndkk", password="0e78872815dd43e9951bf2915f55761b", port=1883)
+client = MQTTClient("daniel", "mndkk.dk",user="iot", password="3Y5s6JrX", port=1883)
 
 # client.set_callback(sub_cb)
 client.connect()
@@ -51,4 +51,4 @@ while True:
    # client.check_msg()
    count += 1
 
-   time.sleep(59)
+   time.sleep(30)
