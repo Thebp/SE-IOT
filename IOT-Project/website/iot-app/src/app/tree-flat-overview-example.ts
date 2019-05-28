@@ -3,6 +3,7 @@ import {Component, Injectable} from '@angular/core';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 import {BehaviorSubject, Observable, of as observableOf} from 'rxjs';
 import {CdkDragDrop} from '@angular/cdk/drag-drop';
+import { HttpServiceService} from 'src/app/http-service.service'
 
 /**
  * File node data with nested structure.
@@ -29,6 +30,8 @@ export class FileFlatNode {
 /**
  * The file structure tree data in string. The data could be parsed into a Json object
  */
+
+
 const TREE_DATA = JSON.stringify({
   Classroom: {
     "Boa rd1": 'pycom',
@@ -76,11 +79,13 @@ const TREE_DATA = JSON.stringify({
  */
 @Injectable()
 export class FileDatabase {
+  
+  //ROOM_DATA;
   dataChange = new BehaviorSubject<FileNode[]>([]);
 
   get data(): FileNode[] { return this.dataChange.value; }
 
-  constructor() {
+  constructor(private httpService: HttpServiceService) {
     this.initialize();
   }
 
@@ -95,6 +100,11 @@ export class FileDatabase {
     // Notify the change.
     this.dataChange.next(data);
   }
+
+  //JUST IGNORE
+  /* getData(){
+    this.ROOM_DATA = JSON.stringify(this.httpService.get('http://mndkk.dk/allofdatgoodstuff'));
+  } */
 
   /**
    * Build the file structure tree. The `value` is the Json object, or a sub-tree of a Json object.
@@ -132,7 +142,7 @@ export class FileDatabase {
   selector: 'tree-flat-overview-example',
   templateUrl: 'tree-flat-overview-example.html',
   styleUrls: ['tree-flat-overview-example.css'],
-  providers: [FileDatabase]
+  providers: [FileDatabase, HttpServiceService]
 })
 export class TreeFlatOverviewExample {
 
@@ -165,7 +175,7 @@ export class TreeFlatOverviewExample {
    * This constructs an array of nodes that matches the DOM,
    * and calls rememberExpandedTreeNodes to persist expand state
    */
-  //MAYBE USE THIS FOR A BUTTON THAT ADDS STUFF
+  //MAYBE USE THIS FOR A BUTTON THAT ADDS STUFF - Christian
   visibleNodes(): FileNode[] {
     this.rememberExpandedTreeNodes(this.treeControl, this.expandedNodeSet);
     const result = [];
@@ -196,7 +206,9 @@ export class TreeFlatOverviewExample {
 
     // deep clone the data source so we can mutate it
     const changedData = JSON.parse(JSON.stringify(this.dataSource.data));
-    console.log(changedData)
+    
+    //console.log(this.dataSource.data)
+    
     // recursive find function to find siblings of node
     function findNodeSiblings(arr: Array<any>, id: string): Array<any> {
       let result, subResult;
