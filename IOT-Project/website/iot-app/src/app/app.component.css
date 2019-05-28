@@ -2,7 +2,7 @@ h1 {
     color: #369;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 250%;
-  }
+}
 #main{
   width:95%;
   margin:0 auto;
@@ -22,4 +22,17 @@ h1 {
   width: 25%;
   height: 25%;
   float: left;
+}
+.tp-section {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  height: 60px;
+}
+.tp-margin {
+  margin: 30px;
+}
+
+.mat-slider-horizontal {
+  width: 300px;
 }

@@ -10,7 +10,7 @@ import {MatNativeDateModule} from '@angular/material';
 import {MaterialModule} from 'src/app/material/material.module'
 import {TreeFlatOverviewExample} from 'src/app/tree-flat-overview-example'
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-//import {DragdropComponent} from 'src/app/dragdrop/dragdrop.component'
+import {MatSliderModule, MatSlideToggleModule} from '@angular/material'
 
 @NgModule({
   imports: [
@@ -21,7 +21,12 @@ import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
     MaterialModule,
     MatNativeDateModule,
     ReactiveFormsModule,
-    BrowserModule, ColorPickerModule, HttpClientModule, BrowserAnimationsModule
+    BrowserModule, 
+    ColorPickerModule, 
+    HttpClientModule, 
+    BrowserAnimationsModule,
+    MatSlideToggleModule,
+    MatSliderModule
   ],
   declarations: [
     AppComponent,

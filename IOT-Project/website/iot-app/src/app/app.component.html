@@ -13,6 +13,21 @@
           <app-color-picker>
           </app-color-picker>    
       </div>
+      Intensity
+      <mat-slider
+      class = "tp-margin"
+      [max] = "max"
+      [min] = "min"
+      [thumbLabel] = "thumbLabel"
+      [(ngModel)] = "value"
+      (ngModelChange)="onChange($event)">
+      </mat-slider>
+      
+      <mat-slide-toggle
+      class="tp-margin"
+      [checked]="checked">
+      Toggle daylight harvesting
+      </mat-slide-toggle>
   </div>
 </div>
 
