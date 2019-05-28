@@ -30,7 +30,7 @@ class Board:
             self.dispatcher[topic_str](ujson.loads(msg_str))
 
     def publish_lightlevel(self, alarm):
-        self.mqtt.publish(topic="{}/lightsensor/lightlevel".format(self.id), msg=str(self.lightsensor.get_lightlevel()))
+        self.mqtt.publish(topic="lightdata", msg=ujson.dumps({"lightlevel":self.lightsensor.get_lightlevel(),"board_id":self.id}))
 
     def run(self):
         self.mqtt.set_callback(self.process_message)
