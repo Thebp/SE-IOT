@@ -3,11 +3,12 @@ import machine
 import pycom
 import time
 
-pycom.hearbeat(False)
+pycom.heartbeat(False)
 wlan = WLAN(mode=WLAN.STA)
+wlan.disconnect()
 
-ssid = "OnePlus 5"
-password = "eef2a2620ab5"
+ssid = "Oneplus 6"
+password = "csgg1469"
 
 access_points = wlan.scan()
 for ap in access_points:

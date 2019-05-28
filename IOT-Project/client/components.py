@@ -2,6 +2,9 @@ from lib.LTR329ALS01 import LTR329ALS01
 import pycom
 
 class Led:
+    def __init__(self):
+        pycom.heartbeat(False)
+
     def set_rgb(self, red, green, blue):
         value = int('0x%02x%02x%02x' % (red, green, blue))
         pycom.rgbled(value)

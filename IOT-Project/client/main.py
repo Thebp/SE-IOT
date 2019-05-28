@@ -4,27 +4,29 @@ import ujson
 from components import Led, Lightsensor
 from mqtt import MQTTClient
 from machine import Timer
+import ubinascii
 
 MQTT_HOST = "mndkk.dk"
 MQTT_USER = "iot"
-MQTT_PASSWORD = "newpass12345"
+MQTT_PASSWORD = "uS831ACCL6sZHz4"
 MQTT_PORT = 1883
 
 class Board:
     def __init__(self):
-        self.id = str(machine.unique_id())
-        print(self.id)
-        self.mqtt = MQTTClient(self.id, MQTT_HOST, MQTT_USER, MQTT_PASSWORD, MQTT_PORT)
+        self.id = ubinascii.hexlify(machine.unique_id()).decode("utf-8") 
+        print("machine id: {}".format(self.id))
+        self.mqtt = MQTTClient(self.id, MQTT_HOST, MQTT_PORT, MQTT_USER, MQTT_PASSWORD)
         self.led = Led()
         self.lightsensor = Lightsensor()
 
         self.dispatcher = {}
-        self.dispatcher["{}/led/rgb".format(self.id), lambda rgb: self.led.set_rgb(rgb["red"], rgb["green"], rgb["blue"])]
+        self.dispatcher["{}/led/rgb".format(self.id)] = lambda rgb: self.led.set_rgb(rgb["red"], rgb["green"], rgb["blue"])
 
     def process_message(self, topic, msg):
         topic_str = topic.decode("utf-8")
         msg_str = topic.decode("utf-8")
-        self.dispatcher[topic_str](ujson.loads(msg_str))
+        if topic_str in self.dispatcher:
+            self.dispatcher[topic_str](ujson.loads(msg_str))
 
     def publish_lightlevel(self, alarm):
         self.mqtt.publish(topic="{}/lightsensor/lightlevel".format(self.id), msg=str(self.lightsensor.get_lightlevel()))
@@ -46,3 +48,6 @@ class Board:
             for alarm in alarms:
                 alarm.cancel()
             self.mqtt.disconnect()
+
+if __name__ == "__main__":
+    Board().run()
