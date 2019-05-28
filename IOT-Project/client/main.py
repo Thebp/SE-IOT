@@ -25,7 +25,8 @@ class Board:
     def process_message(self, topic, msg):
         topic_str = topic.decode("utf-8")
         msg_str = topic.decode("utf-8")
-        self.dispatcher[topic_str](ujson.loads(msg_str))
+        if topic_str in self.dispatcher:
+            self.dispatcher[topic_str](ujson.loads(msg_str))
 
     def publish_lightlevel(self, alarm):
         self.mqtt.publish(topic="{}/lightsensor/lightlevel".format(self.id), msg=str(self.lightsensor.get_lightlevel()))
