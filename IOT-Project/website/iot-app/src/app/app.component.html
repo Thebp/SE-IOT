@@ -4,10 +4,15 @@
     {{ title }}
   </h1>
 </div>
-<div align="center">
-    <app-color-picker>
-    </app-color-picker>    
+<div id="main" align="center">
+  <div id="tree" class="mat-app-background basic-container">
+        <tree-flat-overview-example>loading</tree-flat-overview-example>
+  </div> 
+  <div id="window">
+      <div id="color">
+          <app-color-picker>
+          </app-color-picker>    
+      </div>
+  </div>
 </div>
-<button (click)="sendMsg()">Send Message</button>
-(mousedown)="onMouseDown($event)"
-(mousemove)="onMouseMove($event)"
+
