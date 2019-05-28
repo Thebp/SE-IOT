@@ -25,7 +25,7 @@ class Board:
 
     def process_message(self, topic, msg):
         topic_str = topic.decode("utf-8")
-        msg_str = topic.decode("utf-8")
+        msg_str = msg.decode("utf-8")
         if topic_str in self.dispatcher:
             self.dispatcher[topic_str](ujson.loads(msg_str))
 
