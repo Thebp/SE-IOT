@@ -24,4 +24,4 @@ for ap in access_points:
         pycom.rgbled(0x000000)
 
         machine.main('main.py')
-        break   
+        break
