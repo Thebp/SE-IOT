@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -34,11 +35,14 @@ type RGBData struct {
 
 type Database interface {
 	//GetRoom(id string) (room Room, err error)
-	//GetRooms() ([]Room, error)
+	GetRooms() ([]Room, error)
 	GetBoard(id string) (board Board, err error)
-	//GetBoardsByRoom(roomId string) ([]Board, error)
+	InsertRoom(room Room) (Room, error)
+	GetBoardsByRoom(roomId string) ([]Board, error)
+	GetUnassignedBoards() ([]Board, error)
 	//GetBoards() ([]Board, error)
 	InsertBoard(board Board) error
+	UpdateBoard(board Board) error
 	InsertLightData(data LightData) error
 }
 
@@ -63,8 +67,6 @@ func (s *server) boardDiscovery(client mqtt.Client, msg mqtt.Message) {
 			fmt.Println(err)
 		}
 	}
-
-	s.sendMessage(fmt.Sprintf("%v/led/ping", board.ID), `{"ping":"ping"}`)
 }
 
 func (s *server) processLightData(client mqtt.Client, msg mqtt.Message) {
@@ -94,10 +96,166 @@ func (s *server) sendMessage(topic string, payload interface{}) {
 	token.Wait()
 }
 
+func (s *server) pingBoard(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	boardId := vars["boardId"]
+
+	board, err := s.database.GetBoard(boardId)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if board.ID != "" {
+		s.sendMessage(fmt.Sprintf("%v/led/ping", board.ID), `{"ping":"ping"}`)
+	}
+	w.WriteHeader(200)
+}
+
+func (s *server) getRooms(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	rooms, err := s.database.GetRooms()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	rooms_json, err := json.Marshal(rooms)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+
+	w.Write(rooms_json)
+}
+
+func (s *server) getBoardsByRoom(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	roomId := vars["roomId"]
+
+	boards, err := s.database.GetBoardsByRoom(roomId)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	boards_json, err := json.Marshal(boards)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+
+	w.Write(boards_json)
+}
+
+func (s *server) getUnassignedBoards(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	boards, err := s.database.GetUnassignedBoards()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	boards_json, err := json.Marshal(boards)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+
+	w.Write(boards_json)
+}
+
+func (s *server) putBoard(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	vars := mux.Vars(r)
+	boardId := vars["boardId"]
+
+	var board Board
+	err := json.NewDecoder(r.Body).Decode(&board)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Request body is invalid format", http.StatusBadRequest)
+		return
+	}
+
+	if board.ID != boardId {
+		http.Error(w, "Board ID in request body is different from ID in URL", http.StatusBadRequest)
+		return
+	}
+
+	err = s.database.UpdateBoard(board)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(200)
+}
+
+func (s *server) postRoom(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	var room Room
+	err := json.NewDecoder(r.Body).Decode(&room)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Request body is invalid format", http.StatusBadRequest)
+		return
+	}
+
+	room, err = s.database.InsertRoom(room)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(200)
+}
+
 type inMemoryDatabase struct {
-	boards    []Board
-	rooms     []Room
-	lightData []LightData
+	boards      []Board
+	rooms       []Room
+	lightData   []LightData
+	roomCounter int
+}
+
+func (d *inMemoryDatabase) InsertRoom(room Room) (Room, error) {
+	room.ID = strconv.Itoa(d.roomCounter)
+	d.rooms = append(d.rooms, room)
+	d.roomCounter++
+	return room, nil
+}
+
+func (d *inMemoryDatabase) GetRooms() ([]Room, error) {
+	return d.rooms, nil
+}
+
+func (d *inMemoryDatabase) GetBoardsByRoom(roomId string) ([]Board, error) {
+	board_list := make([]Board, 0)
+	for _, board := range d.boards {
+		if board.RoomID == roomId {
+			board_list = append(board_list, board)
+		}
+	}
+	return board_list, nil
+}
+
+func (d *inMemoryDatabase) GetUnassignedBoards() ([]Board, error) {
+	board_list := make([]Board, 0)
+	for _, board := range d.boards {
+		if board.RoomID == "" {
+			board_list = append(board_list, board)
+		}
+	}
+	return board_list, nil
 }
 
 func (d *inMemoryDatabase) GetBoard(id string) (Board, error) {
@@ -107,6 +265,16 @@ func (d *inMemoryDatabase) GetBoard(id string) (Board, error) {
 		}
 	}
 	return Board{}, nil
+}
+
+func (d *inMemoryDatabase) UpdateBoard(board Board) error {
+	for i, b := range d.boards {
+		if b.ID == board.ID {
+			d.boards[i] = board
+			return nil
+		}
+	}
+	return fmt.Errorf("No board with ID %v", board.ID)
 }
 
 func (d *inMemoryDatabase) InsertBoard(board Board) error {
@@ -123,12 +291,6 @@ func (d *inMemoryDatabase) InsertLightData(lightData LightData) error {
 
 func main() {
 
-	// _, err := os.Create("light-" + strconv.FormatInt(time.Now().Unix(), 10) + ".csv")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker("mndkk.dk:1883")
 	opts.SetClientID("server")
@@ -140,15 +302,26 @@ func main() {
 		panic(token.Error())
 	}
 
-	database := inMemoryDatabase{make([]Board, 0), make([]Room, 0), make([]LightData, 0)}
+	database := inMemoryDatabase{make([]Board, 0), make([]Room, 0), make([]LightData, 0), 0}
 
 	server := server{&database, mqtt_client}
 	server.mqtt.Subscribe("board_discovery", 0, server.boardDiscovery)
 	server.mqtt.Subscribe("lightdata", 0, server.processLightData)
 
 	r := mux.NewRouter()
-	//r.HandleFunc("/light", server.postLight)
+	r.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	})
+
+	r.HandleFunc("/boards/{boardId}/ping", server.pingBoard).Methods("POST")
+	r.HandleFunc("/rooms", server.getRooms).Methods("GET")
+	r.HandleFunc("/rooms", server.postRoom).Methods("POST")
+	r.HandleFunc("/rooms/{roomId}/boards", server.getBoardsByRoom).Methods("GET")
+	r.HandleFunc("/unassigned_boards", server.getUnassignedBoards).Methods("GET")
+	r.HandleFunc("/boards/{boardId}", server.putBoard).Methods("PUT")
 
 	fmt.Println("Listening...")
-	http.ListenAndServe(":50001", r)
+	http.ListenAndServe(":50002", r)
 }
