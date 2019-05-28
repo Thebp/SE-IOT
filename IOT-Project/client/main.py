@@ -21,6 +21,7 @@ class Board:
 
         self.dispatcher = {}
         self.dispatcher["{}/led/rgb".format(self.id)] = lambda rgb: self.led.set_rgb(rgb["red"], rgb["green"], rgb["blue"])
+        self.dispatcher["{}/led/ping".format(self.id)] = lambda msg: self.led.ping()
 
     def process_message(self, topic, msg):
         topic_str = topic.decode("utf-8")
@@ -36,6 +37,9 @@ class Board:
         self.mqtt.connect()
 
         self.mqtt.subscribe("{}/led/rgb".format(self.id))
+        self.mqtt.subscribe("{}/led/ping".format(self.id))
+
+        self.mqtt.publish(topic="board_discovery", msg=ujson.dumps({"id":self.id}))
 
         alarms = []
         alarms.append(Timer.Alarm(handler=self.publish_lightlevel, s=5, periodic=True))
