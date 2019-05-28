@@ -1,19 +1,48 @@
-import urequests as requests
-from lib.LTR329ALS01 import LTR329ALS01
+import machine
 import time
-import pycom
-lt = LTR329ALS01()
+import ujson
+from components import Led, Lightsensor
+from mqtt import MQTTClient
+from machine import Timer
 
-url = 'http://mndkk.dk:50001/light'
-#data = {'data':'christian'}
-#r = requests.post(url, json=data)
-#print(str(r.content))
-while True:
-    light_data = str(lt.light()[0])
-    data = {'data':light_data}
-    print(light_data)
-    r2 = requests.post(url, json=data)
-    print(r2.content)
-    print(hex(int(r2.content)))
-    pycom.rgbled(int(r2.content))
-    time.sleep(1)
+MQTT_HOST = "mndkk.dk"
+MQTT_USER = "iot"
+MQTT_PASSWORD = "newpass12345"
+MQTT_PORT = 1883
+
+class Board:
+    def __init__(self):
+        self.id = str(machine.unique_id())
+        print(self.id)
+        self.mqtt = MQTTClient(self.id, MQTT_HOST, MQTT_USER, MQTT_PASSWORD, MQTT_PORT)
+        self.led = Led()
+        self.lightsensor = Lightsensor()
+
+        self.dispatcher = {}
+        self.dispatcher["{}/led/rgb".format(self.id), lambda rgb: self.led.set_rgb(rgb["red"], rgb["green"], rgb["blue"])]
+
+    def process_message(self, topic, msg):
+        topic_str = topic.decode("utf-8")
+        msg_str = topic.decode("utf-8")
+        self.dispatcher[topic_str](ujson.loads(msg_str))
+
+    def publish_lightlevel(self, alarm):
+        self.mqtt.publish(topic="{}/lightsensor/lightlevel".format(self.id), msg=str(self.lightsensor.get_lightlevel()))
+
+    def run(self):
+        self.mqtt.set_callback(self.process_message)
+        self.mqtt.connect()
+
+        self.mqtt.subscribe("{}/led/rgb".format(self.id))
+
+        alarms = []
+        alarms.append(Timer.Alarm(handler=self.publish_lightlevel, s=5, periodic=True))
+
+        try:
+            while True:
+                self.mqtt.wait_msg()
+                machine.idle()
+        finally:
+            for alarm in alarms:
+                alarm.cancel()
+            self.mqtt.disconnect()
