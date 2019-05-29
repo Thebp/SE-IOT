@@ -56,6 +56,11 @@ func (s *server) run() {
 	r.HandleFunc("/unassigned_boards", s.getUnassignedBoards).Methods("GET")
 	r.HandleFunc("/boards/{boardId}", s.putBoard).Methods("PUT")
 
+	_, err := s.database.InsertRoom(Room{Name: "Default room"})
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	fmt.Println("Listening...")
 	http.ListenAndServe(":50002", r)
 }
@@ -114,6 +119,7 @@ func (s *server) boardDiscovery(client mqtt.Client, msg mqtt.Message) {
 		return
 	}
 	if b.ID == "" {
+		board.RoomID = "0"
 		err = s.database.InsertBoard(board)
 		if err != nil {
 			fmt.Println(err)
