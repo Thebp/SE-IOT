@@ -96,7 +96,7 @@ export class FileDatabase {
   get data(): FileNode[] { return this.dataChange.value; }
 
 
-  constructor(private httpService: HttpServiceService) {
+  constructor(public httpService: HttpServiceService) {
     this.initialize();
   }
 
@@ -124,11 +124,6 @@ export class FileDatabase {
   //   this.data.push(node)
   //   this.dataChange.next(this.data);
   // }
-
-  //JUST IGNORE
-  /* getData(){
-    this.ROOM_DATA = JSON.stringify(this.httpService.get('http://mndkk.dk/allofdatgoodstuff'));
-  } */
 
   /**
    * Build the file structure tree. The `value` is the Json object, or a sub-tree of a Json object.
@@ -172,8 +167,9 @@ export class FileDatabase {
   providers: [FileDatabase, HttpServiceService]
 })
 export class TreeFlatOverviewExample {
-
+  
   add(name: string): void{
+    
     name = name.trim();
     if(!name) {return}
     console.log(name)
@@ -190,6 +186,9 @@ export class TreeFlatOverviewExample {
     this.dataSource.data.push(node);
     this.dataSource.data.push(unassignedNode);
     this.rebuildTreeForData(this.dataSource.data);
+    let new_room = {'name':node.filename}
+    console.log(new_room)
+    this.httpService.post('/rooms', new_room).subscribe()
     
     // id: string;
     // children: FileNode[];
@@ -213,7 +212,7 @@ export class TreeFlatOverviewExample {
   expandTimeout: any;
   expandDelay = 1000;
 
-  constructor(database: FileDatabase) {
+  constructor(database: FileDatabase, public httpService : HttpServiceService) {
     this.treeFlattener = new MatTreeFlattener(this.transformer, this._getLevel,
       this._isExpandable, this._getChildren);
     this.treeControl = new FlatTreeControl<FileFlatNode>(this._getLevel, this._isExpandable);
