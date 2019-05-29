@@ -24,7 +24,8 @@ export class HttpServiceService {
   }
 
   public post(url:string,data: any): Observable<any>{
-    return this.httpClient.post<any>(this.url+url, data);
+    console.log(this.url + url +"POST" + data)
+    return this.httpClient.post(this.url+url, data);
   }
 
 
