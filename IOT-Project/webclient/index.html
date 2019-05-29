@@ -1,0 +1,41 @@
+<html ng-app>
+    <head>
+        <title>Pycom Controller</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular.min.js"></script>
+        <script src="js/main.js"></script>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body>
+        <div ng-controller="RoomController">
+            <div id="room-list">
+                <button class="button" id="new-room-button" ng-click="newRoom()">New Room</button>
+                <ul>
+                    <li ng-repeat="room in rooms">
+                        <a ng-click="roomOnClick(room.id)">{{ room.name }}</a>
+                    </li>
+                </ul>
+            </div>
+            <div id="room-editor">
+                <form>
+                    <input placeholder="Room name" type="text" id="room-name" ng-model="room.name"/>
+                    <!-- Color: <input type="color" id="color" ng-model="room.led_config.color."/><br /> -->
+                    Color: <input type="number" id="red" ng-model="room.led_config.color.red"/><input type="number" id="green" ng-model="room.led_config.color.green"/><input type="number" id="blue" ng-model="room.led_config.color.blue"/><br/>
+                    Intensity: <input type="number" id="intensity" ng-model="room.led_config.intensity"/><br/>
+                    Daylight harvesting: <input type="checkbox" id="harvesting" ng-model="room.led_config.daylight_harvesting"/><br/>
+                    <input type="hidden" ng-model="room.id"/>
+                    <div id="board-list">
+                        <h3>Boards</h3>
+                        <ul>
+                            <li ng-repeat="board in room.boards">
+                                {{board.id}} <input class="button" type="button" value="Move" ng-click="moveBoard(board.id)"/> <input class="button" type="button" value="Locate" ng-click="locate(board.id)"/>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="button-group">
+                            <input class="button" id="save-button" type="button" value="Save" ng-click="saveRoom()"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>
