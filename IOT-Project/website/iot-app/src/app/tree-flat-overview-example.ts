@@ -1,5 +1,5 @@
 import {FlatTreeControl} from '@angular/cdk/tree';
-import {Component, Injectable} from '@angular/core';
+import {Component, Injectable, APP_INITIALIZER} from '@angular/core';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 import {BehaviorSubject, Observable, of as observableOf} from 'rxjs';
 import {CdkDragDrop} from '@angular/cdk/drag-drop';
@@ -167,7 +167,7 @@ export class FileDatabase {
   providers: [FileDatabase, HttpServiceService]
 })
 export class TreeFlatOverviewExample {
-  
+
   add(name: string): void{
     
     name = name.trim();
@@ -180,15 +180,16 @@ export class TreeFlatOverviewExample {
     node.disabled = false
     node.id = "0/"+indexOfNewNode+""
     node.type = ""
-    console.log(node)
+    //console.log(node)
     let unassignedNode = this.dataSource.data[this.dataSource.data.length-1]
-    this.dataSource.data.pop();
-    this.dataSource.data.push(node);
-    this.dataSource.data.push(unassignedNode);
-    this.rebuildTreeForData(this.dataSource.data);
     let new_room = {'name':node.filename}
-    console.log(new_room)
-    this.httpService.post('/rooms', new_room).subscribe()
+    this.httpService.post('/rooms', new_room).subscribe((data : any) =>{
+      this.database.initialize();
+    });
+    
+    //this.dataSource.data.pop();
+    //this.dataSource.data.push(node);
+
     
     // id: string;
     // children: FileNode[];
@@ -212,7 +213,7 @@ export class TreeFlatOverviewExample {
   expandTimeout: any;
   expandDelay = 1000;
 
-  constructor(database: FileDatabase, public httpService : HttpServiceService) {
+  constructor(public database: FileDatabase, public httpService : HttpServiceService) {
     this.treeFlattener = new MatTreeFlattener(this.transformer, this._getLevel,
       this._isExpandable, this._getChildren);
     this.treeControl = new FlatTreeControl<FileFlatNode>(this._getLevel, this._isExpandable);
