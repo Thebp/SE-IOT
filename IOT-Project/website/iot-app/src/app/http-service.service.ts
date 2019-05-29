@@ -16,16 +16,16 @@ const httpOptions = {
 })
 export class HttpServiceService {
 
-  url = 'http://mndkk.dk:50002/boards/30aea474c680/ping';//Insert url to server
+  url = 'http://mndkk.dk:50002';///boards/30aea474c680/ping';//Insert url to server
 
   constructor(private httpClient: HttpClient) { }
 
   public get(url:string): Observable<any>{
-    return this.httpClient.get(url);
+    return this.httpClient.get(this.url+url);
   }
 
-  public post(data: any): Observable<any>{
-    return this.httpClient.post<any>(this.url, data);
+  public post(url:string,data: any): Observable<any>{
+    return this.httpClient.post<any>(this.url+url, data);
   }
 
 

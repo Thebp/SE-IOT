@@ -14,6 +14,7 @@ export class FileNode {
   children: FileNode[];
   filename: string;
   type: any;
+  disabled: boolean;
 }
 
 /** Flat node with expandable and level information */
@@ -23,7 +24,8 @@ export class FileFlatNode {
     public filename: string,
     public level: number,
     public type: any,
-    public id: string
+    public id: string,
+    public disabled: boolean
   ) {}
 }
 
@@ -115,6 +117,9 @@ export class FileDatabase {
       const value = obj[key];
       const node = new FileNode();
       node.filename = key;
+      if(node.filename == ""){
+        node.disabled = true;
+      }
       /**
        * Make sure your node has an id so we can properly rearrange the tree during drag'n'drop.
        * By passing parentId to buildFileTree, it constructs a path of indexes which make
@@ -164,7 +169,7 @@ export class TreeFlatOverviewExample {
   }
 
   transformer = (node: FileNode, level: number) => {
-    return new FileFlatNode(!!node.children, node.filename, level, node.type, node.id);
+    return new FileFlatNode(!!node.children, node.filename, level, node.type, node.id, node.disabled);
   }
   private _getLevel = (node: FileFlatNode) => node.level;
   private _isExpandable = (node: FileFlatNode) => node.expandable;
@@ -253,11 +258,23 @@ export class TreeFlatOverviewExample {
     this.rebuildTreeForData(changedData);
   }
 
+  drag(event: CdkDragDrop<string[]>) {
+    const node = event.item.data;
+    console.log(node)
+    if(node.filename != ""){
+    this.dragging = true;
+    }else{
+      this.dragging = false;
+    }
+  }
+
+
   /**
    * Experimental - opening tree nodes as you drag over them
    */
   dragStart() {
     this.dragging = true;
+
   }
   dragEnd() {
     this.dragging = false;
