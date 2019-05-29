@@ -19,7 +19,7 @@ export class AppComponent {
   constructor(private httpService: HttpServiceService){}
   onChange(value){
     console.log(value)
-    this.httpService.post('')//Send intensity value
+    this.httpService.post('/boards/30aea474c680/ping','')//Send intensity value
       .subscribe()
   }
 

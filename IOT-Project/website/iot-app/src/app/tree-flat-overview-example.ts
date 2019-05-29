@@ -14,6 +14,7 @@ export class FileNode {
   children: FileNode[];
   filename: string;
   type: any;
+  disabled: boolean;
 }
 
 /** Flat node with expandable and level information */
@@ -23,7 +24,8 @@ export class FileFlatNode {
     public filename: string,
     public level: number,
     public type: any,
-    public id: string
+    public id: string,
+    public disabled: boolean
   ) {}
 }
 
@@ -32,43 +34,51 @@ export class FileFlatNode {
  */
 
 
-const TREE_DATA = JSON.stringify({
-  Classroom: {
-    "Boa rd1": 'pycom',
-    Chrome: 'app',
-    Webstorm: 'app',
-    "":""
-  },
-  Documents: {
-    "":"",
-    angular: {
-      src: {
-        compiler: 'ts',
-        core: 'ts'
-      }
-    },
-    material2: {
-      src: {
-        button: 'ts',
-        checkbox: 'ts',
-        input: 'ts'
-      }
-    }
-  },
-  Downloads: {
-    October: 'pdf',
-    November: 'pdf',
-    Tutorial: 'html'
-  },
-  Pictures: {
-    'Photo Booth Library': {
-      Contents: 'dir',
-      Pictures: 'dir'
-    },
-    Sun: 'png',
-    Woods: 'jpg'
-  }
-});
+console.log(document.getElementsByName("AddRoom"))
+// var controlCheckbox = <HTMLFormElement>document.getElementById("AddRoom"),
+// addBtn = document.getElementById("btn_add"),
+// container = document.getElementById("observers");
+// // ObserverSubject.extend(new ObserverSubject.Subject(), controlCheckbox);
+// controlCheckbox.onclick=()=>{
+// this.Notify(controlCheckbox.textContent);
+// }
+
+
+// const TREE_DATA = JSON.stringify({
+//   Classroom: {
+//     "":""
+//   },
+//     Unassigned: {
+//       "Boa rd1": "",
+//     Chrome: 'app',
+//     Webstorm: 'app',
+//     "":""
+//     }
+// });
+
+class RGB_data{
+  red: number;
+  green: number;
+  blue: number;
+}
+
+class Led_config{
+  intensity: number;
+  color: RGB_data;
+  daylight_harvesting: boolean;
+}
+
+class Board{
+  id: string;
+  room_id: string;
+}
+
+class Room{
+  id: string;
+  name: string;
+  led_config: Led_config; 
+  boards: Board[]; 
+}
 
 /**
  * File database, it can build a tree structured Json object from string.
@@ -78,28 +88,42 @@ const TREE_DATA = JSON.stringify({
  * structure.
  */
 @Injectable()
-export class FileDatabase {
+export class FileDatabase { 
   
   //ROOM_DATA;
   dataChange = new BehaviorSubject<FileNode[]>([]);
 
   get data(): FileNode[] { return this.dataChange.value; }
 
+
   constructor(private httpService: HttpServiceService) {
     this.initialize();
   }
 
   initialize() {
+    console.log("Initialize")
     // Parse the string to json object.
-    const dataObject = JSON.parse(TREE_DATA); //MAKE GET REQUEST TO GET DATA FROM SERVER INSTEAD
-
-    // Build the tree nodes from Json object. The result is a list of `FileNode` with nested
-    //     file node as children.
-    const data = this.buildFileTree(dataObject, 0);
-
-    // Notify the change.
-    this.dataChange.next(data);
+    this.httpService.get('/rooms').subscribe((rooms: Room[]) => {
+      let room_tree_data = {}
+      for(let room of rooms){
+        room_tree_data[room.name] = room
+      }
+      console.log(room_tree_data)
+      // Build the tree nodes from Json object. The result is a list of `FileNode` with nested
+      //     file node as children.
+      const data = this.buildFileTree(room_tree_data, 0);
+  
+      // Notify the change.
+      this.dataChange.next(data);
+    });
   }
+
+  // addToTree(name: string){
+  //   let node = new FileNode()
+  //   node.filename = name;
+  //   this.data.push(node)
+  //   this.dataChange.next(this.data);
+  // }
 
   //JUST IGNORE
   /* getData(){
@@ -115,6 +139,9 @@ export class FileDatabase {
       const value = obj[key];
       const node = new FileNode();
       node.filename = key;
+      if(node.filename == ""){
+        node.disabled = true;
+      }
       /**
        * Make sure your node has an id so we can properly rearrange the tree during drag'n'drop.
        * By passing parentId to buildFileTree, it constructs a path of indexes which make
@@ -146,6 +173,38 @@ export class FileDatabase {
 })
 export class TreeFlatOverviewExample {
 
+  add(name: string): void{
+    name = name.trim();
+    if(!name) {return}
+    console.log(name)
+    let indexOfNewNode = this.dataSource.data.length-1
+    let node = new FileNode()
+    node.filename = name;
+    node.children = []
+    node.disabled = false
+    node.id = "0/"+indexOfNewNode+""
+    node.type = ""
+    console.log(node)
+    let unassignedNode = this.dataSource.data[this.dataSource.data.length-1]
+    this.dataSource.data.pop();
+    this.dataSource.data.push(node);
+    this.dataSource.data.push(unassignedNode);
+    this.rebuildTreeForData(this.dataSource.data);
+    
+    // id: string;
+    // children: FileNode[];
+    // filename: string;
+    // type: any;
+    // disabled: boolean;
+    // Tree.push()
+    // const changedData = JSON.parse(JSON.stringify(this.dataSource.data));
+   //  if(!name) { return;}
+   //  this.heroService.addHero({name} as Hero).subscribe(hero => {
+   //    this.heroes.push(hero);
+   //  });
+ 
+  }
+
   treeControl: FlatTreeControl<FileFlatNode>;
   treeFlattener: MatTreeFlattener<FileNode, FileFlatNode>;
   dataSource: MatTreeFlatDataSource<FileNode, FileFlatNode>;
@@ -164,7 +223,7 @@ export class TreeFlatOverviewExample {
   }
 
   transformer = (node: FileNode, level: number) => {
-    return new FileFlatNode(!!node.children, node.filename, level, node.type, node.id);
+    return new FileFlatNode(!!node.children, node.filename, level, node.type, node.id, node.disabled);
   }
   private _getLevel = (node: FileFlatNode) => node.level;
   private _isExpandable = (node: FileFlatNode) => node.expandable;
@@ -225,6 +284,7 @@ export class TreeFlatOverviewExample {
 
     // remove the node from its old place
     const node = event.item.data;
+    console.log(node)
     const siblings = findNodeSiblings(changedData, node.id);
     const siblingIndex = siblings.findIndex(n => n.id === node.id);
     const nodeToInsert: FileNode = siblings.splice(siblingIndex, 1)[0];
@@ -253,11 +313,23 @@ export class TreeFlatOverviewExample {
     this.rebuildTreeForData(changedData);
   }
 
+  drag(event: CdkDragDrop<string[]>) {
+    const node = event.item.data;
+    console.log(node)
+    if(node.filename != ""){
+    this.dragging = true;
+    }else{
+      this.dragging = false;
+    }
+  }
+
+
   /**
    * Experimental - opening tree nodes as you drag over them
    */
   dragStart() {
     this.dragging = true;
+
   }
   dragEnd() {
     this.dragging = false;
