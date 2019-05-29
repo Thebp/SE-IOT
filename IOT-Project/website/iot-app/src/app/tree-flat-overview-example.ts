@@ -34,42 +34,26 @@ export class FileFlatNode {
  */
 
 
+console.log(document.getElementsByName("AddRoom"))
+// var controlCheckbox = <HTMLFormElement>document.getElementById("AddRoom"),
+// addBtn = document.getElementById("btn_add"),
+// container = document.getElementById("observers");
+// // ObserverSubject.extend(new ObserverSubject.Subject(), controlCheckbox);
+// controlCheckbox.onclick=()=>{
+// this.Notify(controlCheckbox.textContent);
+// }
+
+
 const TREE_DATA = JSON.stringify({
   Classroom: {
-    "Boa rd1": 'pycom',
+    "":""
+  },
+    Unassigned: {
+      "Boa rd1": 'pycom',
     Chrome: 'app',
     Webstorm: 'app',
     "":""
-  },
-  Documents: {
-    "":"",
-    angular: {
-      src: {
-        compiler: 'ts',
-        core: 'ts'
-      }
-    },
-    material2: {
-      src: {
-        button: 'ts',
-        checkbox: 'ts',
-        input: 'ts'
-      }
     }
-  },
-  Downloads: {
-    October: 'pdf',
-    November: 'pdf',
-    Tutorial: 'html'
-  },
-  Pictures: {
-    'Photo Booth Library': {
-      Contents: 'dir',
-      Pictures: 'dir'
-    },
-    Sun: 'png',
-    Woods: 'jpg'
-  }
 });
 
 /**
@@ -80,12 +64,13 @@ const TREE_DATA = JSON.stringify({
  * structure.
  */
 @Injectable()
-export class FileDatabase {
+export class FileDatabase { 
   
   //ROOM_DATA;
   dataChange = new BehaviorSubject<FileNode[]>([]);
 
   get data(): FileNode[] { return this.dataChange.value; }
+
 
   constructor(private httpService: HttpServiceService) {
     this.initialize();
@@ -93,6 +78,7 @@ export class FileDatabase {
 
   initialize() {
     // Parse the string to json object.
+    let rooms = this.httpService.get('/rooms');
     const dataObject = JSON.parse(TREE_DATA); //MAKE GET REQUEST TO GET DATA FROM SERVER INSTEAD
 
     // Build the tree nodes from Json object. The result is a list of `FileNode` with nested
@@ -102,6 +88,13 @@ export class FileDatabase {
     // Notify the change.
     this.dataChange.next(data);
   }
+
+  // addToTree(name: string){
+  //   let node = new FileNode()
+  //   node.filename = name;
+  //   this.data.push(node)
+  //   this.dataChange.next(this.data);
+  // }
 
   //JUST IGNORE
   /* getData(){
@@ -150,6 +143,37 @@ export class FileDatabase {
   providers: [FileDatabase, HttpServiceService]
 })
 export class TreeFlatOverviewExample {
+
+  add(name: string): void{
+    name = name.trim();
+    if(!name) {return}
+    console.log(name)
+    let indexOfNewNode = this.dataSource.data.length-1
+    let node = new FileNode()
+    node.filename = name;
+    node.children = []
+    node.disabled = false
+    node.id = "0/"+indexOfNewNode+""
+    node.type = ""
+    console.log(node)
+    let unassignedNode = this.dataSource.data[this.dataSource.data.length-1]
+    this.dataSource.data.pop();
+    this.dataSource.data.push(node);
+    this.dataSource.data.push(unassignedNode);
+    this.rebuildTreeForData(this.dataSource.data);
+    // id: string;
+    // children: FileNode[];
+    // filename: string;
+    // type: any;
+    // disabled: boolean;
+    // Tree.push()
+    // const changedData = JSON.parse(JSON.stringify(this.dataSource.data));
+   //  if(!name) { return;}
+   //  this.heroService.addHero({name} as Hero).subscribe(hero => {
+   //    this.heroes.push(hero);
+   //  });
+ 
+  }
 
   treeControl: FlatTreeControl<FileFlatNode>;
   treeFlattener: MatTreeFlattener<FileNode, FileFlatNode>;
@@ -230,6 +254,7 @@ export class TreeFlatOverviewExample {
 
     // remove the node from its old place
     const node = event.item.data;
+    console.log(node)
     const siblings = findNodeSiblings(changedData, node.id);
     const siblingIndex = siblings.findIndex(n => n.id === node.id);
     const nodeToInsert: FileNode = siblings.splice(siblingIndex, 1)[0];
