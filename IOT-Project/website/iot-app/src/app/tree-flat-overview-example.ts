@@ -44,17 +44,41 @@ console.log(document.getElementsByName("AddRoom"))
 // }
 
 
-const TREE_DATA = JSON.stringify({
-  Classroom: {
-    "":""
-  },
-    Unassigned: {
-      "Boa rd1": 'pycom',
-    Chrome: 'app',
-    Webstorm: 'app',
-    "":""
-    }
-});
+// const TREE_DATA = JSON.stringify({
+//   Classroom: {
+//     "":""
+//   },
+//     Unassigned: {
+//       "Boa rd1": "",
+//     Chrome: 'app',
+//     Webstorm: 'app',
+//     "":""
+//     }
+// });
+
+class RGB_data{
+  red: number;
+  green: number;
+  blue: number;
+}
+
+class Led_config{
+  intensity: number;
+  color: RGB_data;
+  daylight_harvesting: boolean;
+}
+
+class Board{
+  id: string;
+  room_id: string;
+}
+
+class Room{
+  id: string;
+  name: string;
+  led_config: Led_config; 
+  boards: Board[]; 
+}
 
 /**
  * File database, it can build a tree structured Json object from string.
@@ -77,16 +101,21 @@ export class FileDatabase {
   }
 
   initialize() {
+    console.log("Initialize")
     // Parse the string to json object.
-    let rooms = this.httpService.get('/rooms');
-    const dataObject = JSON.parse(TREE_DATA); //MAKE GET REQUEST TO GET DATA FROM SERVER INSTEAD
-
-    // Build the tree nodes from Json object. The result is a list of `FileNode` with nested
-    //     file node as children.
-    const data = this.buildFileTree(dataObject, 0);
-
-    // Notify the change.
-    this.dataChange.next(data);
+    this.httpService.get('/rooms').subscribe((rooms: Room[]) => {
+      let room_tree_data = {}
+      for(let room of rooms){
+        room_tree_data[room.name] = room
+      }
+      console.log(room_tree_data)
+      // Build the tree nodes from Json object. The result is a list of `FileNode` with nested
+      //     file node as children.
+      const data = this.buildFileTree(room_tree_data, 0);
+  
+      // Notify the change.
+      this.dataChange.next(data);
+    });
   }
 
   // addToTree(name: string){
@@ -161,6 +190,7 @@ export class TreeFlatOverviewExample {
     this.dataSource.data.push(node);
     this.dataSource.data.push(unassignedNode);
     this.rebuildTreeForData(this.dataSource.data);
+    
     // id: string;
     // children: FileNode[];
     // filename: string;

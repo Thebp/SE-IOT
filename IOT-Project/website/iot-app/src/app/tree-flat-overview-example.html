@@ -2,7 +2,7 @@
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" cdkDropList (cdkDropListDropped)="drop($event)">
   <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding cdkDrag [cdkDragData]="node" [cdkDragDisabled]="node.disabled" (mouseenter)="dragHover(node)" (mouseleave)="dragHoverEnd()" (cdkDragStarted)="dragStart()" (cdkDragReleased)="dragEnd()">
     <button mat-icon-button disabled></button>
-    {{node.filename}}  {{node.type}}
+    {{node.filename}} 
   </mat-tree-node>
   
   <mat-tree-node *matTreeNodeDef="let node;when: hasChild" matTreeNodePadding cdkDrag [cdkDragData]="node" [cdkDragDisabled]="node.disabled" (mouseenter)="dragHover(node)" (mouseleave)="dragHoverEnd()" (cdkDragStarted)="dragStart()" (cdkDragReleased)="dragEnd()">
@@ -12,7 +12,7 @@
         {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
       </mat-icon>
     </button>
-    {{node.filename}} {{node.type}}
+    {{node.filename}}
   </mat-tree-node>
 </mat-tree>
 
